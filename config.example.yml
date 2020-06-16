@@ -1,0 +1,5 @@
+---
+- username: foo@bar.com
+  password: secretforfoo
+- username: baz@bar.com
+  password: secretforbaz
