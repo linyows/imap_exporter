@@ -6,7 +6,7 @@ type Timer struct {
 	mark time.Time
 }
 
-func StartTimer() {
+func StartTimer() *Timer {
 	return &Timer{mark: time.Now()}
 }
 
