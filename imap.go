@@ -33,13 +33,26 @@ func NewIMAP(addr string) (*IMAP, error) {
 
 	if port == "993" {
 		t := tls.Client(conn, &tls.Config{ServerName: host})
+		reader := bufio.NewReader(t)
+		_, err = reader.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
 		return &IMAP{addr: addr, count: 0, conn: t}, nil
 	}
 
+	reader := bufio.NewReader(conn)
+	_, err = reader.ReadString('\n')
+	if err != nil {
+		return nil, err
+	}
 	return &IMAP{addr: addr, count: 0, conn: conn}, nil
 }
 
 func (i *IMAP) Cmd(name string, args ...string) (*Cmd, error) {
+	if name == "" {
+		panic("IMAP command empty!")
+	}
 	tag := GenTag(name)
 	cmd := &Cmd{req: append([]string{tag, name}, args...)}
 	_, err := i.conn.Write([]byte(strings.Join(cmd.req, " ") + "\n"))
@@ -47,6 +60,7 @@ func (i *IMAP) Cmd(name string, args ...string) (*Cmd, error) {
 		return cmd, err
 	}
 	reader := bufio.NewReader(i.conn)
+	upper := strings.ToUpper(name)
 	for {
 		msg, err := reader.ReadString('\n')
 		if err == io.EOF {
@@ -57,6 +71,9 @@ func (i *IMAP) Cmd(name string, args ...string) (*Cmd, error) {
 		}
 		cmd.res = append(cmd.res, msg)
 		if strings.HasPrefix(msg, tag) {
+			break
+		}
+		if upper == "CAPABILITY" || upper == "LOGOUT" {
 			break
 		}
 	}
