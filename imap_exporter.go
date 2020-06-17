@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/go-kit/kit/log"
@@ -62,55 +61,50 @@ func (i *IMAPCollector) Collect(ch chan<- prometheus.Metric) {
 
 	for _, u := range i.users {
 		t := StartTimer()
-		imap, err := NewIMAP(i.address)
+		cl, err := NewClient(i.address)
 		if err != nil {
 			level.Error(i.logger).Log("msg", "Error connecting for IMAP", "err", err)
 			i.failure = true
 			return
 		}
 		ch <- prometheus.MustNewConstMetric(fll, prometheus.GaugeValue, t.Lap(), u.Username, "conn")
-		defer imap.Close()
+		defer cl.Close()
 
-		cmd, err := imap.Cmd("LOGIN", u.Username, u.Password)
-		level.Debug(i.logger).Log("msg", "IMAP LOGIN", "req", strings.Join(cmd.req, " "), "res", strings.Join(cmd.res, " "))
-		if err != nil {
-			level.Error(i.logger).Log("msg", "Error LOGIN command for IMAP", "err", err)
+		if err := cl.Send("LOGIN", u.Username, u.Password); err != nil {
+			level.Error(i.logger).Log("msg", "Error LOGIN command for IMAP",
+				"err", err, "sent", cl.LastSent, "received", cl.LastReceived)
 			i.failure = true
 			return
 		}
 		ch <- prometheus.MustNewConstMetric(fll, prometheus.GaugeValue, t.Lap(), u.Username, "login")
 
-		cmd, err = imap.Cmd("LIST", "\"\"", "*")
-		level.Debug(i.logger).Log("msg", "IMAP LIST", "req", strings.Join(cmd.req, " "), "res", strings.Join(cmd.res, " "))
-		if err != nil {
-			level.Error(i.logger).Log("msg", "Error LIST command for IMAP", "err", err)
+		if err = cl.Send("LIST", "\"\"", "*"); err != nil {
+			level.Error(i.logger).Log("msg", "Error LIST command for IMAP",
+				"err", err, "sent", cl.LastSent, "received", cl.LastReceived)
 			i.failure = true
 			return
 		}
 		ch <- prometheus.MustNewConstMetric(fll, prometheus.GaugeValue, t.Lap(), u.Username, "list")
 
-		cmd, err = imap.Cmd("SELECT", "\"INBOX\"")
-		level.Debug(i.logger).Log("msg", "IMAP SELECT", "req", strings.Join(cmd.req, " "), "res", strings.Join(cmd.res, " "))
-		if err != nil {
-			level.Error(i.logger).Log("msg", "Error SELECT command for IMAP", "err", err)
+		if err = cl.Send("SELECT", "\"INBOX\""); err != nil {
+			level.Error(i.logger).Log("msg", "Error SELECT command for IMAP",
+				"err", err, "sent", cl.LastSent, "received", cl.LastReceived)
 			i.failure = true
 			return
 		}
 		ch <- prometheus.MustNewConstMetric(fll, prometheus.GaugeValue, t.Lap(), u.Username, "select")
 
-		cmd, err = imap.Cmd("FETCH", "1:20", "RFC822.HEADER")
-		level.Debug(i.logger).Log("msg", "IMAP FETCH", "req", strings.Join(cmd.req, " "), "res", strings.Join(cmd.res, " "))
-		if err != nil {
-			level.Error(i.logger).Log("msg", "Error FETCH command for IMAP", "err", err)
+		if err = cl.Send("FETCH", "1:20", "RFC822.HEADER"); err != nil {
+			level.Error(i.logger).Log("msg", "Error FETCH command for IMAP",
+				"err", err, "sent", cl.LastSent, "received", cl.LastReceived)
 			i.failure = true
 			return
 		}
 		ch <- prometheus.MustNewConstMetric(fll, prometheus.GaugeValue, t.Lap(), u.Username, "fetch")
 
-		cmd, err = imap.Cmd("LOGOUT")
-		level.Debug(i.logger).Log("msg", "IMAP LOGOUT", "req", strings.Join(cmd.req, " "), "res", strings.Join(cmd.res, " "))
-		if err != nil {
-			level.Error(i.logger).Log("msg", "Error LOGOUT command for IMAP", "err", err)
+		if err = cl.Send("LOGOUT"); err != nil {
+			level.Error(i.logger).Log("msg", "Error LOGOUT command for IMAP",
+				"err", err, "sent", cl.LastSent, "received", cl.LastReceived)
 			i.failure = true
 			return
 		}
