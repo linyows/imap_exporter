@@ -31,7 +31,7 @@ var (
 
 	fll = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "first_loading_latency_seconds"),
-		"First Loading Latency",
+		"Latency first loading of MUA.",
 		[]string{"user", "cmd"},
 		nil,
 	)
