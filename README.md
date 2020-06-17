@@ -1,7 +1,7 @@
 IMAP4rev1 Exporter
 ==
 
-<img alt="GitHub Workflow" src="https://img.shields.io/github/workflow/status/linyows/imap_exporter/go?style=for-the-badge">
+<img alt="GitHub Workflow" src="https://img.shields.io/github/workflow/status/linyows/imap_exporter/Go?style=for-the-badge">
 
 Export IMAP4rev1 server health to Prometheus.
 
