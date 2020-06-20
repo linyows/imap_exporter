@@ -124,7 +124,7 @@ func main() {
 	var (
 		configFile    = kingpin.Flag("config", "Path to config yaml file for IMAP login.").Required().String()
 		imapAddress   = kingpin.Flag("imap-address", "Address to connect on for IMAP.").Default("localhost:110").String()
-		listenAddress = kingpin.Flag("listen-address", "Address to listen on for web interface and telemetry.").Default(":9107").String()
+		listenAddress = kingpin.Flag("listen-address", "Address to listen on for web interface and telemetry.").Default(":9993").String()
 		metricsPath   = kingpin.Flag("telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
 	)
 
