@@ -5,6 +5,8 @@ IMAP4rev1 Exporter
 
 Export IMAP4rev1 server health to Prometheus.
 
+<img src="./misc/grafana.png" width="70%">
+
 Usage
 --
 
